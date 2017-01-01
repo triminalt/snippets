@@ -1,0 +1,228 @@
+/**
+ * @date 2017-01-01
+ * @version initial
+ * @author triminalt AT gmail DOT com
+ */
+
+package cc.t34.java.utils.timer;
+
+
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
+
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+
+public final class MultistageTimer {
+    private static final String TAG = MultistageTimer.class.getSimpleName();
+
+    public static final class Stage {
+        public final int interval;
+        public final int count;
+        public final Runnable runnable;
+
+        public Stage(
+                  @Nonnegative final int interval
+                , final int count
+                , @Nonnull Runnable runnable) {
+            if (!available(interval, count, runnable)) {
+                throw new IllegalArgumentException(
+                          TAG
+                        + ", [Stage]"
+                        + ", !available(" + interval + ", " + count + ", " + runnable + ")");
+            }
+            this.interval = interval;
+            this.count = count;
+            this.runnable = runnable;
+        }
+
+        private boolean available() {
+            return available(interval, count, runnable);
+        }
+
+        private boolean endless() {
+            return endless(interval, count, runnable);
+        }
+
+        private boolean available(Stage stage) {
+            return null != stage && stage.available();
+        }
+
+        private static boolean endless(Stage stage) {
+            return null != stage && stage.endless();
+        }
+
+        private static boolean available(
+                final int interval, final int count, final Runnable runnable) {
+            return (interval > 0 && null != runnable);
+        }
+
+        private static boolean endless(
+                final int interval, final int count, final Runnable runnable) {
+            return available(interval, count, runnable) && count <= 0;
+        }
+    }
+
+    public static final class Multistage {
+        private Stage value;
+        private Multistage next;
+        private Multistage tail;
+
+        private Multistage() {
+            value = null;
+            next = null;
+            tail = null;
+        }
+
+        private Multistage(@Nonnull Stage value, Multistage next) {
+            this.value = value;
+            this.next = next;
+        }
+
+        public static Multistage create() {
+            return new Multistage();
+        }
+
+        public void add(
+                  @Nonnegative final int interval
+                , final int count
+                , @Nonnull final Runnable runnable
+                , boolean circular) {
+            add(new Stage(interval, count, runnable), circular);
+        }
+
+        public void add(@Nonnull final Stage stage, final boolean circular) {
+            if (null == value) {
+                value = stage;
+                tail = this;
+            }
+            else {
+                tail.next = new Multistage(stage, circular ? this : null);
+                tail = tail.next;
+            }
+        }
+
+        public void add(@Nonnull final Stage[] stages, final boolean circular) {
+            add(Arrays.asList(stages), circular);
+        }
+
+        public void add(@Nonnull final Collection<Stage> stages, final boolean circular) {
+            final int size = stages.size();
+            int i = 0;
+            for (Stage stage : stages) {
+                add(stage, (size == ++i) && circular);
+            }
+        }
+
+        public void clear() {
+            Multistage cursor = this;
+            for (; null != cursor.next ;) {
+                Multistage tmp = cursor.next;
+                cursor.value = null;
+                cursor.tail = null;
+                cursor.next = null;
+                cursor = tmp;
+            }
+        }
+    }
+
+    private static final AtomicInteger sThreadIndex = new AtomicInteger(0);
+
+    private final Runnable timer = new Runnable() {
+        @Override
+        public void run() {
+            if (!mRunning.get()) {
+                return;
+            }
+
+            cursor.value.runnable.run();
+            if (!cursor.value.endless() && (++index > cursor.value.count)) {
+                enterNextStage();
+            }
+            handler.postDelayed(this, cursor.value.interval);
+        }
+    };
+    private final Handler handler;
+    private final Multistage initial;
+
+
+    private Multistage cursor = null;
+    private int index = 0;
+
+    private AtomicBoolean mRunning = new AtomicBoolean(false);
+
+    public MultistageTimer(@Nonnull final Multistage multistage) {
+        this(multistage, true);
+    }
+
+    public MultistageTimer(@Nonnull final Multistage multistage, final boolean runOnUiThread) {
+        final HandlerThread thread = new HandlerThread(
+                TAG + "-thread-" + sThreadIndex.getAndIncrement(), THREAD_PRIORITY_BACKGROUND);
+        final Looper looper = runOnUiThread ? Looper.getMainLooper() : thread.getLooper();
+        this.handler = new Handler(looper);
+        this.initial = multistage;
+        reset();
+    }
+
+    public void start() {
+        if (mRunning.get()) {
+            return;
+        }
+        mRunning.set(true);
+        timer.run();
+    }
+
+    /**
+     * TODO Implement pause and resume.
+     */
+    /*
+    public void pause() {
+
+    }
+
+    public void resume() {
+
+    }
+    */
+
+    public void stop() {
+        reset();
+    }
+
+    public void restart() {
+        stop();
+        start();
+    }
+
+    private void enterNextStage() {
+        /**
+         * Check the next stage.
+         */
+        if (null == cursor.next) {
+            return;
+        }
+
+        /**
+         * Goto the next stage.
+         */
+        resetLevel(cursor.next);
+    }
+
+    private void reset() {
+        resetLevel(initial);
+        mRunning.set(false);
+    }
+
+    private void resetLevel(Multistage multistage) {
+        cursor = multistage;
+        index = 0;
+    }
+}
