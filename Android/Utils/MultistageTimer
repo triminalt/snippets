@@ -4,7 +4,7 @@
  * @author triminalt AT gmail DOT com
  */
 
-package cc.t34.java.utils.timer;
+package cc.t34.anroid.utils.timer;
 
 
 import android.os.Handler;
