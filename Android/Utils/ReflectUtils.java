@@ -16,7 +16,6 @@ package cc.t34.java.utils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -25,7 +24,7 @@ public final class ReflectUtils {
     private static final String TAG = ReflectUtils.class.getSimpleName();
 
     private ReflectUtils() {
-        // Disable.
+        // DISABLED.
     }
     
     public static final class Argument {
@@ -350,9 +349,7 @@ public final class ReflectUtils {
             throw new IllegalArgumentException(
                     TAG + ", [getProperty]" + ", prop.isEmpty() ...");
         }
-
-        @Nonnull
-
+        
         final Field field = getField(clazz, prop);
         if (null == field) {
             return ReturnValue.FAILED;
