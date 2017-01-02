@@ -4,7 +4,7 @@
  * @author triminalt AT gmail DOT com
  */
 
-package cc.t34.anroid.utils.timer;
+package cc.t34.android.utils.timer;
 
 
 import android.os.Handler;
@@ -145,7 +145,9 @@ public final class MultistageTimer {
 
             cursor.value.runnable.run();
             if (!cursor.value.endless() && (++index > cursor.value.count)) {
-                enterNextStage();
+                if (!enterNextStage()) {
+                    return;
+                }
             }
             handler.postDelayed(this, cursor.value.interval);
         }
@@ -202,18 +204,12 @@ public final class MultistageTimer {
         start();
     }
 
-    private void enterNextStage() {
-        /**
-         * Check the next stage.
-         */
+    private boolean enterNextStage() {
         if (null == cursor.next) {
-            return;
+            return false;
         }
-
-        /**
-         * Goto the next stage.
-         */
         resetLevel(cursor.next);
+        return true;
     }
 
     private void reset() {
