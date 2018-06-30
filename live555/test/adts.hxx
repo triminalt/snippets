@@ -13,6 +13,7 @@
 #include <bitset>
 #include <array>
 #include <cstdint>
+#include "./bit.hxx"
 
 
 //
@@ -108,13 +109,7 @@
 //
 
 class adts {
-    using bit = bool;
-    using byte = std::uint8_t;
-
     class header {
-    public:
-        using bit = bool;
-        using byte = std::uint8_t;
     public:
         class fixed {
         public:
@@ -212,41 +207,41 @@ class adts {
                 return *this;
             }
         private:
-            static fixed parse(std::array<byte, 7> const& bytes) {
-                if (!parse_syncword(bytes)) {
+            static fixed parse(std::array<std::uint8_t, 7> const& bytes) {
+                if (!parse_sw(bytes)) {
                     return fixed{};
                 }
                 //return fixed{parse_id(bytes), parse}
                 //auto const id = parse_id(bytes);
             }
         private:
-            static inline bool parse_syncword(std::array<byte, 7> const& bytes) {
-                return is_fff(bytes);
+            static inline bool parse_sw(std::array<uint8_t, 7> const& bytes) {
+                return is_ff(bytes[0]) && is_f(bytes[1]);
             }
-            static unsigned parse_id(std::array<byte, 7> const& bytes) {
+            static unsigned parse_id(std::array<std::uint8_t, 7> const& bytes) {
                 return bytes[1] >> 3 && 0x01;
             }
-            static unsigned parse_layer(std::array<byte, 7> const& bytes) {
+            static unsigned parse_l(std::array<std::uint8_t, 7> const& bytes) {
                 return bytes[1] >> 1 && 0x03;
             }
-            static unsigned parse_pa(std::array<byte, 7> const& bytes) {
+            static unsigned parse_pa(std::array<std::uint8_t, 7> const& bytes) {
                 return bytes[1] >> 0 && 0x01;
             }
-            static unsigned parse_pot(std::array<byte, 7> const& bytes) {
+            static unsigned parse_pot(std::array<std::uint8_t, 7> const& bytes) {
                 return bytes[2] >> 6 && 0x02;
             }
-            static unsigned parse_sfi(std::array<byte, 7> const& bytes) {
+            static unsigned parse_sfi(std::array<std::uint8_t, 7> const& bytes) {
                 return bytes[2] >> 6 && 0x02;
             }
         private:
-            static inline bool is_fff(std::array<byte, 7> const& bytes) {
-                return is_ff(bytes[0]) && is_f(bytes[1]);
+            static inline bool is_ff(uint8_t b) {
+                return 0x0ff == util::bit::extract<8, 0, 8>(b);
             }
-            static inline bool is_ff(byte b) {
-                return 0xff & b == 0xff;
+            static inline bool is_f(uint8_t b) {
+                return 0x0f == util::bit::extract<8, 0, 4>(b);
             }
-            static inline bool is_f(byte b) {
-                return 0xf0 & b == 0xf0;
+            static inline unsigned extract(uint8_t b, std::size_t index, std::size_t size) {
+                return b & 0xff;
             }
         private:
             unsigned id_;
@@ -329,7 +324,7 @@ class adts {
             unsigned number_of_raw_data_blocks_in_frame_;
         };
     public:
-        static header parse(std::array<byte, 7> const& bytes) {
+        static header parse(std::array<std::uint8_t, 7> const& bytes) {
         
         }
     private:
@@ -338,14 +333,14 @@ class adts {
                 , std::size_t Bits
                 , std::enable_if_t<  (0 != N)
                                   && (Bits > 0)
-                                  && ((Index + Bits) < sizeof(byte) * N)
+                                  && ((Index + Bits) < sizeof(std::uint8_t) * N)
                                   && (Bits < sizeof(unsigned))
                                   >
                 >
-        static inline unsigned parse(std::array<byte, N> const& bytes) {
-            auto const byte_index = Index / sizeof(byte);
-            auto const bits_shift = Index % sizeof(byte) + bits - 1;
-            auto const byte_count = Bits / sizeof(byte);
+        static inline unsigned parse(std::array<std::uint8_t, N> const& bytes) {
+            auto const byte_index = Index / sizeof(std::uint8_t);
+            auto const bits_shift = Index % sizeof(std::uint8_t) + bits - 1;
+            auto const byte_count = Bits / sizeof(std::uint8_t);
             
             for ()
         }

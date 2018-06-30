@@ -134,11 +134,14 @@ add_executable(server WIN32
     ${INC}
     ${DIR}/test/cc.cxx
     ${DIR}/test/arrptr.hxx
-    ${DIR}/test/bits.hxx
+    ${DIR}/test/bit.hxx
     ${DIR}/test/adts.hxx
     ${DIR}/test/aac_pump.hxx
+    ${DIR}/test/aac_source.hxx
+    ${DIR}/test/aac_subsession.hxx
     ${DIR}/test/h264_pump.hxx
-    ${DIR}/test/server.cxx
+    ${DIR}/test/aac_server.hxx
+    ${DIR}/test/main.cxx
     )
 target_link_libraries(server
    Ws2_32.lib
