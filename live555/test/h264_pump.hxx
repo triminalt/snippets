@@ -11,23 +11,20 @@
 
 class h264_pump final {
 public:
-    h264_pump( unsigned sampling_frequency
-             , unsigned buffer_ms)
-        : buffer_size_(60) {//buffer_size(sampling_frequency, buffer_ms)) {
+    h264_pump (unsigned fps, unsigned buffer_ms)
+        : buffer_size_(buffer_size(fps, buffer_ms)) {
     }
-    ~h264_pump() {
-        int i = 0;
-    }
+	~h264_pump() = default;
 public:
     bool produce(std::string const& packet) {
         if (!mutex_.try_lock()) {
             return false;
         }
-        if (packets_.size() > buffer_size_) {
+        if (frames_.size() > buffer_size_) {
             auto empty = std::queue<std::string>{};
-            packets_.swap(empty);
+            frames_.swap(empty);
         }
-        packets_.push(packet);
+        frames_.push(packet);
         mutex_.unlock();
         std::this_thread::yield();
         return true;
@@ -37,26 +34,25 @@ public:
        if (!mutex_.try_lock()) {
             return false;
         }
-        if (packets_.empty()) {
+        if (frames_.empty()) {
             mutex_.unlock();
             std::this_thread::yield();
             return false;
         }
-        packet = packets_.front();
-        packets_.pop();
+        packet = frames_.front();
+        frames_.pop();
         mutex_.unlock();
         return true;
     }
 private:
-    static inline unsigned buffer_size( unsigned sampling_frequency
-                                      , unsigned buffer_ms) {
-        auto const ms_pre_frame = double{1024 * 1000} / sampling_frequency;
+    static inline unsigned buffer_size(unsigned fps, unsigned buffer_ms) {
+		auto const ms_pre_frame = double{1000} / fps;
         return static_cast<unsigned>(buffer_ms / ms_pre_frame);
     }
 public:
     unsigned buffer_size_;
 private:
-    std::queue<std::string> packets_;
+    std::queue<std::string> frames_;
 private:
     std::mutex mutex_;
 private:

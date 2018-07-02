@@ -15,9 +15,7 @@ public:
             , unsigned buffer_ms)
         : buffer_size_(buffer_size(sampling_frequency, buffer_ms)) {
     }
-    ~aac_pump() {
-        int i = 0;
-    }
+	~aac_pump() = default;
 public:
     bool produce(std::string const& packet) {
         if (!mutex_.try_lock()) {

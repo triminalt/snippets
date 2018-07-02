@@ -10,9 +10,10 @@
 #include "./h264_pump.hxx"
 
 
-class aac_producer {
+class h264_producer {
 public:
-    aac_producer(h264_pump* pump) {
+    h264_producer(h264_pump* pump)
+		: pump_(pump) {
         std::ifstream ifs{"test.264", std::ios::binary};
         if (!ifs) {
             return;
@@ -25,43 +26,41 @@ public:
         ifs.read(buffer.get(), size);
 
         std::size_t i = 0;
-        std::size_t x = 0;
+		std::size_t last = i;
         for (;;) {
-            if (i > size - 7) {
+            if (i > size - 4) {
                 break;
             }
             unsigned char byte0 = static_cast<unsigned char>(buffer[i]);
             unsigned char byte1 = static_cast<unsigned char>(buffer[i + 1]);
-            auto const is_ff = 0xff == byte0;
-			auto const is_f = 0xf0 == (0xf0 & byte1);
-            if (!(is_ff && is_f)) {
-                break;
-            }
-            std::uint16_t const len = ((buffer[i + 3] & 0x03) << 11)
-                                    | (buffer[i + 4] << 3)
-                                    | ((buffer[i + 5] & 0xE0) >> 5);
-            if (++x > 2500) {
-                break;
-            }
-            packets_.emplace_back(std::string{&buffer[i], len});
-            i += len;
+			unsigned char byte2 = static_cast<unsigned char>(buffer[i + 2]);
+			unsigned char byte3 = static_cast<unsigned char>(buffer[i + 3]);
+			auto const is_0001 = 0x00 == byte0 && 0x00 == byte1 && 0x00 == byte2 && 0x01 == byte3;
+            if (is_0001) {
+				if (0 != i) {
+					frames_.emplace_back(std::string{&buffer[last], i - last});
+					last = i;
+				}
+				i += 4;
+			} else {
+				++i;
+			}
         }
-
         initialize_thread();
     }
     void thread_routine() {
-        auto const size = packets_.size();
+        auto const size = frames_.size();
         auto i = std::vector<std::string>::size_type{0};
         for (;looping_;) {
             if (size == i) {
                 i = 0;
             }
-            pump_->produce(packets_[i++]);
+            pump_->produce(frames_[i++]);
             std::this_thread::sleep_for(std::chrono::milliseconds{20});
         }
     }
     bool initialize_thread() {
-        thread_ = std::thread{&aac_producer::thread_routine, this};
+        thread_ = std::thread{&h264_producer::thread_routine, this};
         try {
             thread_.detach();
         } catch (std::exception const& e) {
@@ -83,7 +82,8 @@ private:
     std::mutex efinish_mutex_;   
 private:
 	h264_pump* pump_;
-    std::vector<std::string> packets_;
+    std::vector<std::string> frames_;
 };
+
 
 #endif

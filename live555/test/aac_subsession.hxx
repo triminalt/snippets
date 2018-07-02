@@ -12,9 +12,9 @@ public:
     static aac_subsession* createNew( UsageEnvironment& env
                                     , Boolean reused
                                     , aac_pump* pump
-                                    , std::uint8_t profile
-		                            , std::uint8_t sampling_freq_idx
-                                    , std::uint8_t channel_cfg) {
+                                    , unsigned profile
+		                            , unsigned sampling_freq_idx
+                                    , unsigned channel_cfg) {
         return new aac_subsession{ env
                                  , pump
                                  , reused
@@ -26,9 +26,9 @@ private:
     aac_subsession( UsageEnvironment& env
                   , aac_pump* pump
                   , Boolean reused
-                  , std::uint8_t profile
-		          , std::uint8_t sampling_freq_idx
-                  , std::uint8_t channel_cfg)
+                  , unsigned profile
+		          , unsigned sampling_freq_idx
+                  , unsigned channel_cfg)
         : OnDemandServerMediaSubsession(env, reused)
         , pump_(pump)
         , profile_(profile)
@@ -62,9 +62,9 @@ protected:
     }
 private:
     aac_pump* pump_;
-    std::uint8_t profile_;
-    std::uint8_t sampling_frequency_index_;
-    std::uint8_t channel_config_;
+    unsigned profile_;
+    unsigned sampling_frequency_index_;
+    unsigned channel_config_;
 };
 
 #endif // AAC_SUBSESSION_XX

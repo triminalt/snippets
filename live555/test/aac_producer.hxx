@@ -12,8 +12,9 @@
 
 class aac_producer {
 public:
-    aac_producer(aac_pump* pump) {
-        std::ifstream ifs{"test.aac", std::ios::binary};
+    aac_producer(aac_pump* pump)
+		: pump_(pump) {
+        std::ifstream ifs{"sample.aac", std::ios::binary};
         if (!ifs) {
             return;
         }
@@ -25,7 +26,6 @@ public:
         ifs.read(buffer.get(), size);
 
         std::size_t i = 0;
-        std::size_t x = 0;
         for (;;) {
             if (i > size - 7) {
                 break;
@@ -40,9 +40,9 @@ public:
             std::uint16_t const len = ((buffer[i + 3] & 0x03) << 11)
                                     | (buffer[i + 4] << 3)
                                     | ((buffer[i + 5] & 0xE0) >> 5);
-            if (++x > 2500) {
-                break;
-            }
+            //if (++x > 2500) {
+            //    break;
+            //}
             packets_.emplace_back(std::string{&buffer[i], len});
             i += len;
         }
@@ -57,7 +57,7 @@ public:
                 i = 0;
             }
             pump_->produce(packets_[i++]);
-            std::this_thread::sleep_for(std::chrono::milliseconds{20});
+            std::this_thread::sleep_for(std::chrono::milliseconds{21});
         }
     }
     bool initialize_thread() {

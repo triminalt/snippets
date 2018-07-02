@@ -3,13 +3,16 @@
 #include <ios>
 #include <fstream>
 #include "./aac_pump.hxx"
+#include "./aac_producer.hxx"
 #include "./aac_server.hxx"
 
+#include "./h264_pump.hxx"
+#include "./h264_producer.hxx"
+#include "./h264_server.hxx"
 
-static aac_pump pump{44100, 1000};
 
-
-
+static aac_pump aac_pmp{44100, 1000};
+static h264_pump h264_pmp{25, 1000};
 
 class aac_consumer {
 public:
@@ -19,7 +22,7 @@ public:
     void thread_routine() {
         for (;looping_;) {
             std::string packet;
-            pump.consume(packet);
+            aac_pmp.consume(packet);
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
         }
     }
@@ -47,12 +50,14 @@ private:
 };
 
 int main() {
-    aac_producer prd;
+	
+    aac_producer aac_prd(&aac_pmp);
+	h264_producer h264_prd(&h264_pmp);
 #if 0
     aac_consumer csm;
 #else
-    aac_server srv(&pump);
-    srv.start(1, 4, 2);
+    aac_server aac_srv(&aac_pmp);
+    aac_srv.start(1, 4, 2);
 #endif
     std::this_thread::sleep_for(std::chrono::hours{1});
     return 0;

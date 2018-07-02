@@ -1,63 +1,34 @@
 
-#ifndef AAC_SOURCE_HXX
-#define AAC_SOURCE_HXX
+#ifndef H264_SOURCE_HXX
+#define H264_SOURCE_HXX
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <GroupsockHelper.hh>
 #include <FramedSource.hh>
-#include "./aac_pump.hxx"
+#include "./h264_pump.hxx"
 
-class aac_source final: public FramedSource {
+class h264_source final: public FramedSource {
 
 public:
-    static aac_source* createNew( UsageEnvironment& env
-                                , aac_pump* pump
-                                , unsigned profile
-		                        , unsigned sample_freq_idx
-                                , unsigned channel_cfg) {
-        return new aac_source(env, pump, profile, sample_freq_idx, channel_cfg);
+    static h264_source* createNew( UsageEnvironment& env
+                                 , h264_pump* pump
+                                 , unsigned fps) {
+        return new h264_source(env, pump, fps);
     }
 public:
-    unsigned sampling_frequency() const {
-        return sampling_frequency_;
+    unsigned fps() const {
+        return fps_;
     }
-    unsigned channels() const {
-        return channels_;
-    }
-    char const* config_str() const {
-        return config_str_;
-    }
-private:
-    aac_source( UsageEnvironment& env
-              , aac_pump* pump
-              , unsigned profile
-              , unsigned sampling_freq_idx
-              , unsigned channel_cfg)
+    h264_source( UsageEnvironment& env
+               , h264_pump* pump
+               , unsigned fps)
         : FramedSource(env)
         , pump_(pump)
-        , profile_(profile)
-        , sampling_frequency_(sampling_frequency(sampling_freq_idx))
-        , channels_(channel_cfg == 0 ? 2 : channel_cfg)
-        , usecs_pre_frame_((1024 * 1000000) / sampling_frequency(sampling_freq_idx)) {
-        unsigned char audioSpecificConfig[2];
-        u_int8_t const audioObjectType = profile + 1;
-        audioSpecificConfig[0] = (audioObjectType << 3) | (sampling_freq_idx >> 1);
-        audioSpecificConfig[1] = (sampling_freq_idx << 7) | (channel_cfg<<3);
-        sprintf(config_str_, "%02X%02x", audioSpecificConfig[0], audioSpecificConfig[1]);
+        , fps_(fps) {
     }
-	virtual ~aac_source() = default;
-private:
-    static inline unsigned sampling_frequency(std::size_t i) {
-        static unsigned constexpr table[16] = {
-            96000 , 88200 , 64000 , 48000
-          , 44100 , 32000 , 24000 , 22050
-          , 16000 , 12000 , 11025 , 8000
-          , 7350  , 0     , 0     , 0
-        };
-        return table[i];
-    }
+	virtual ~h264_source() = default;
 private:
     virtual void doGetNextFrame() override {
         std::string packet;
@@ -128,15 +99,13 @@ private:
         task = envir().taskScheduler().scheduleDelayedTask(0, f, this);
     }
 private:
-    aac_pump* pump_;
+    h264_pump* pump_;
 private:
-    unsigned profile_;
-    unsigned sampling_frequency_;
-    unsigned channels_;
-    unsigned usecs_pre_frame_;
+    unsigned fps_;
+	unsigned usecs_pre_frame_;
 private:
     char config_str_[5];
 };
 
 
-#endif // AAC_SOURCE_HXX
+#endif
