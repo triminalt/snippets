@@ -82,10 +82,10 @@ private:
         if (size < 7) {
             return false;
         }
-        unsigned char byte0 = static_cast<unsigned>(packet[0]);
-        unsigned char byte1 = static_cast<unsigned>(packet[1]);
-        auto const is_ff = unsigned{0xff} == byte0;
-        auto const is_f = unsigned{0xf0} == (unsigned char{0xf0} & byte1);
+		unsigned char byte0 = static_cast<unsigned char>(packet[0]);
+        unsigned char byte1 = static_cast<unsigned char>(packet[1]);
+        auto const is_ff = 0xff == byte0;
+		auto const is_f = 0xf0 == (0xf0 & byte1);
         if (!(is_ff && is_f)) {
             return false;
         }

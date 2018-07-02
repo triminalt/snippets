@@ -59,8 +59,6 @@ private:
     std::queue<std::string> packets_;
 private:
     std::mutex mutex_;
-    std::condition_variable cv_full_;
-    std::condition_variable cv_empty_;
 private:
 };
 
