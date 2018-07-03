@@ -1,3 +1,10 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
+
 #ifndef H264_PRODUCER_HXX
 #define H264_PRODUCER_HXX
 
@@ -105,4 +112,5 @@ private:
 };
 
 
-#endif
+#endif // H264_PRODUCER_HXX
+

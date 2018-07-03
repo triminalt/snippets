@@ -1,3 +1,9 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
 
 #ifndef AAC_PUMP_HXX
 #define AAC_PUMP_HXX
@@ -59,5 +65,6 @@ private:
     std::mutex mutex_;
 private:
 };
+
 
 #endif // AAC_PUMP_HXX

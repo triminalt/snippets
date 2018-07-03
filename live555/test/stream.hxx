@@ -1,5 +1,12 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
+
 #ifndef STREAM_HXX
-#define STREAM_HXXs
+#define STREAM_HXX
 
 
 #include <atomic>
@@ -116,4 +123,4 @@ private:
 };
 
 
-#endif
+#endif // STREAM_HXX

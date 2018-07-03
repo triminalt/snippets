@@ -1,3 +1,10 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
+
 #ifndef AAC_UTILS_HXX
 #define AAC_UTILS_HXX
 
@@ -46,4 +53,4 @@ struct aac_utils {
 };
 
 
-#endif
+#endif // AAC_UTILS_HXX

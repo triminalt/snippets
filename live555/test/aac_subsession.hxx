@@ -1,3 +1,9 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
 
 #ifndef AAC_SUBSESSION_HXX
 #define AAC_SUBSESSION_HXX
@@ -52,4 +58,5 @@ private:
     std::uint8_t channel_config_;
 };
 
-#endif // AAC_SUBSESSION_XX
+
+#endif // AAC_SUBSESSION_HXX

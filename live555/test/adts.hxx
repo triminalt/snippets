@@ -1,7 +1,7 @@
 //
 // @author trimnalt AT gmail DOT com
 // @version initial
-// @date 2018-05-04
+// @date 2018-07-03
 //
 
 
@@ -352,5 +352,6 @@ class adts {
 public:
 private:
 };
+
 
 #endif // ADTS_HXX

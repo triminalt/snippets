@@ -1,6 +1,13 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
 
 #ifndef H264_SOURCE_HXX
 #define H264_SOURCE_HXX
+
 
 #include <cstddef>
 #include <cstdint>
@@ -9,6 +16,7 @@
 #include <FramedSource.hh>
 #include "./h264_utils.hxx"
 #include "./h264_pump.hxx"
+
 
 class h264_source final: public FramedSource {
 public:
@@ -73,4 +81,4 @@ private:
 };
 
 
-#endif
+#endif // H264_SOURCE_HXX

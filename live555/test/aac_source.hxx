@@ -1,6 +1,13 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
 
 #ifndef AAC_SOURCE_HXX
 #define AAC_SOURCE_HXX
+
 
 #include <cstddef>
 #include <cstdint>

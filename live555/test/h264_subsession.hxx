@@ -1,3 +1,10 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
+
 #ifndef H264_SUBSESSION_HXX
 #define H264_SUBSESSION_HXX
 

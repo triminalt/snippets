@@ -1,3 +1,9 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
 
 #ifndef H264_PUMP_HXX
 #define H264_PUMP_HXX
@@ -58,4 +64,5 @@ private:
 private:
 };
 
-#endif // AAC_PUMP_HXX
+
+#endif // H264_PUMP_HXX

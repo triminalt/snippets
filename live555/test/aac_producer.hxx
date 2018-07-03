@@ -1,3 +1,10 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
+
 #ifndef AAC_PRODUCER_HXX
 #define AAC_PRODUCER_HXX
 
@@ -81,4 +88,5 @@ private:
     std::vector<std::string> packets_;
 };
 
-#endif
+
+#endif // AAC_PRODUCER_HXX

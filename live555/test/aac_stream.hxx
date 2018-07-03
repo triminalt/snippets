@@ -1,3 +1,10 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
+
 #ifndef AAC_STREAM_HXX
 #define AAC_STREAM_HXX
 
@@ -106,4 +113,4 @@ private:
 };
 
 
-#endif
+#endif // AAC_STREAM_HXX

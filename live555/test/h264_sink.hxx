@@ -1,3 +1,10 @@
+//
+// @author trimnalt AT gmail DOT com
+// @version initial
+// @date 2018-07-03
+//
+
+
 #ifndef H264_SINK
 #define H264_SINK
 
@@ -26,4 +33,4 @@ public:
 };
 
 
-#endif
+#endif // H264_SINK
