@@ -53,7 +53,6 @@ public:
         announce(instance, sms);
         return loop();
     }
-
     bool end() {
         event_looping_ = 1;
         ulock lock(finish_mutex_);

@@ -22,7 +22,7 @@ public:
     }
     ~h264_pump() = default;
 public:
-    bool produce(std::string const& packet) {
+    bool produce(std::string const& frame) {
         if (!mutex_.try_lock()) {
             return false;
         }
@@ -30,7 +30,7 @@ public:
             auto empty = std::queue<std::string>{};
             frames_.swap(empty);
         }
-        frames_.push(packet);
+        frames_.push(frame);
         mutex_.unlock();
         std::this_thread::yield();
         return true;

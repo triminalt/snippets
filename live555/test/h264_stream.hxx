@@ -50,7 +50,6 @@ public:
         announce(instance, sms);
         return loop();
     }
-
     bool end() {
         event_looping_ = 1;
         ulock lock(finish_mutex_);
@@ -61,8 +60,8 @@ public:
         return true;
     }
 public:
-    bool push(std::string const& packet) {
-        return pump_->produce(packet);
+    bool push(std::string const& frame) {
+        return pump_->produce(frame);
     }
 private:
     static inline BasicUsageEnvironment* create_env() {
@@ -75,7 +74,6 @@ private:
         finished_ = true;
         std::notify_all_at_thread_exit(finish_cv_, ulock{finish_mutex_});
     }
-
     bool loop() {
         thread_ = std::thread{&h264_stream::thread_routine, this};
         try {
