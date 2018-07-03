@@ -13,9 +13,9 @@ public:
     aac_subsession( UsageEnvironment& env
                   , Boolean reused
                   , aac_pump* pump
-                  , unsigned profile
-		          , unsigned sampling_freq_idx
-                  , unsigned channel_cfg)
+                  , std::uint8_t profile
+                  , std::uint8_t sampling_freq_idx
+                  , std::uint8_t channel_cfg)
         : OnDemandServerMediaSubsession(env, reused)
         , pump_(pump)
         , profile_(profile)
@@ -24,33 +24,33 @@ public:
         // EMPTY
     }
 protected:
-    virtual FramedSource* createNewStreamSource( unsigned clientSessionId
-					                           , unsigned& estBitrate) override {
-      estBitrate = 96; // kbps, estimate
-      return aac_source::createNew( envir()
-                                  , pump_
-                                  , profile_
-                                  , sampling_frequency_index_
-                                  , channel_config_);
+    virtual FramedSource* createNewStreamSource( unsigned // clientSessionId
+                                               , unsigned& estBitrate) override {
+      estBitrate = 128; // kbps, estimate
+      return new aac_source( envir()
+                           , pump_
+                           , profile_
+                           , sampling_frequency_index_
+                           , channel_config_);
     }
     virtual RTPSink* createNewRTPSink( Groupsock* rtp
-				                     , unsigned char rtpPayloadTypeIfDynamic
-				                     , FramedSource* src) override {
+                                     , unsigned char rtpPayloadTypeIfDynamic
+                                     , FramedSource* src) override {
         aac_source* aac_src = reinterpret_cast<aac_source*>(src);
         return MPEG4GenericRTPSink::createNew( envir()
                                              , rtp
-					                         , rtpPayloadTypeIfDynamic
-					                         , aac_src->sampling_frequency()
-					                         , "audio"
+                                             , rtpPayloadTypeIfDynamic
+                                             , aac_src->sampling_frequency()
+                                             , "audio"
                                              , "AAC-hbr"
                                              , aac_src->config_str()
-					                         , aac_src->channels());
+                                             , aac_src->channels());
     }
 private:
     aac_pump* pump_;
-    unsigned profile_;
-    unsigned sampling_frequency_index_;
-    unsigned channel_config_;
+    std::uint8_t profile_;
+    std::uint8_t sampling_frequency_index_;
+    std::uint8_t channel_config_;
 };
 
 #endif // AAC_SUBSESSION_XX

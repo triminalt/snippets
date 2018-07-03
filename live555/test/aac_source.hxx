@@ -10,15 +10,31 @@
 #include "./aac_pump.hxx"
 
 class aac_source final: public FramedSource {
-
 public:
-    static aac_source* createNew( UsageEnvironment& env
-                                , aac_pump* pump
-                                , unsigned profile
-		                        , unsigned sample_freq_idx
-                                , unsigned channel_cfg) {
-        return new aac_source(env, pump, profile, sample_freq_idx, channel_cfg);
+    aac_source( UsageEnvironment& env
+              , aac_pump* pump
+              , std::uint8_t profile
+              , std::uint8_t sampling_freq_idx
+              , std::uint8_t channel_cfg)
+        : FramedSource(env)
+        , pump_(pump)
+        , profile_(profile)
+        , sampling_frequency_(sampling_frequency(sampling_freq_idx))
+        , channels_(channel_cfg == 0 ? 2 : channel_cfg)
+        , usecs_pre_frame_((1024 * 1000000) / sampling_frequency(sampling_freq_idx)) {
+
+        std::uint8_t audio_specific_cfg[2] = {0};
+        std::uint8_t const audio_object_type = profile + 1;
+        audio_specific_cfg[0] = (audio_object_type << 3)
+                              | (sampling_freq_idx >> 1);
+        audio_specific_cfg[1] = (sampling_freq_idx << 7)
+                              | (channel_cfg << 3);
+        sprintf( config_str_
+               , "%02X%02x"
+               , audio_specific_cfg[0]
+               , audio_specific_cfg[1]);
     }
+    virtual ~aac_source() = default;
 public:
     unsigned sampling_frequency() const {
         return sampling_frequency_;
@@ -29,25 +45,6 @@ public:
     char const* config_str() const {
         return config_str_;
     }
-private:
-    aac_source( UsageEnvironment& env
-              , aac_pump* pump
-              , unsigned profile
-              , unsigned sampling_freq_idx
-              , unsigned channel_cfg)
-        : FramedSource(env)
-        , pump_(pump)
-        , profile_(profile)
-        , sampling_frequency_(sampling_frequency(sampling_freq_idx))
-        , channels_(channel_cfg == 0 ? 2 : channel_cfg)
-        , usecs_pre_frame_((1024 * 1000000) / sampling_frequency(sampling_freq_idx)) {
-        unsigned char audioSpecificConfig[2];
-        u_int8_t const audioObjectType = profile + 1;
-        audioSpecificConfig[0] = (audioObjectType << 3) | (sampling_freq_idx >> 1);
-        audioSpecificConfig[1] = (sampling_freq_idx << 7) | (channel_cfg<<3);
-        sprintf(config_str_, "%02X%02x", audioSpecificConfig[0], audioSpecificConfig[1]);
-    }
-	virtual ~aac_source() = default;
 private:
     static inline unsigned sampling_frequency(std::size_t i) {
         static unsigned constexpr table[16] = {
@@ -79,10 +76,10 @@ private:
         if (size < 7) {
             return false;
         }
-		unsigned char byte0 = static_cast<unsigned char>(packet[0]);
+        unsigned char byte0 = static_cast<unsigned char>(packet[0]);
         unsigned char byte1 = static_cast<unsigned char>(packet[1]);
         auto const is_ff = 0xff == byte0;
-		auto const is_f = 0xf0 == (0xf0 & byte1);
+        auto const is_f = 0xf0 == (0xf0 & byte1);
         if (!(is_ff && is_f)) {
             return false;
         }
@@ -105,7 +102,7 @@ private:
             return;
         }
         auto const data_index = protection_absent ? 7 : 9;
-        auto const data_size = protection_absent ? (packet_size - 7) 
+        auto const data_size = protection_absent ? (packet_size - 7)
                                                  : (packet_size - 9);
         fFrameSize = (data_size > fMaxSize) ? fMaxSize : data_size;
         fNumTruncatedBytes = (data_size > fMaxSize) ? (data_size - fMaxSize)

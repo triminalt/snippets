@@ -103,7 +103,7 @@
 //   - Description
 //      - Copyright ID Bit
 //      - Copyright ID Start
-//      - AAC Frame Length 
+//      - AAC Frame Length
 //      - ADTS Buffer Fullness
 //      - Number of Raw Data Blocks In Frame
 //
@@ -325,7 +325,7 @@ class adts {
         };
     public:
         static header parse(std::array<std::uint8_t, 7> const& bytes) {
-        
+
         }
     private:
         template< std::size_t N
@@ -341,7 +341,7 @@ class adts {
             auto const byte_index = Index / sizeof(std::uint8_t);
             auto const bits_shift = Index % sizeof(std::uint8_t) + bits - 1;
             auto const byte_count = Bits / sizeof(std::uint8_t);
-            
+
             for ()
         }
     private:

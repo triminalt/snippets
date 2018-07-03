@@ -19,7 +19,7 @@ public:
         , pump_(pump)
         , fps_(fps) {
     }
-	virtual ~h264_source() = default;
+    virtual ~h264_source() = default;
 public:
     unsigned fps() const {
         return fps_;
@@ -69,7 +69,7 @@ private:
     h264_pump* pump_;
 private:
     unsigned fps_;
-	unsigned usecs_pre_frame_;
+    unsigned usecs_pre_frame_;
 };
 
 

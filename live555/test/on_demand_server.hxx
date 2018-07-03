@@ -22,21 +22,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "BasicUsageEnvironment.hh"
 
 namespace {
-UsageEnvironment* env;
+static UsageEnvironment* s_env;
 
 // To make the second and subsequent client for each stream reuse the same
 // input stream as the first client (rather than playing the file from the
 // start for each client), change the following "False" to "True":
-Boolean reuseFirstSource = False;
-
-// To stream *only* MPEG-1 or 2 video "I" frames
-// (e.g., to reduce network bandwidth),
-// change the following "False" to "True":
-Boolean iFramesOnly = False;
-
+static Boolean reuseFirstSource = True;
 }
 static void announceStream(RTSPServer* rtspServer, ServerMediaSession* sms,
-			   char const* streamName, char const* inputFileName); // fwd
+               char const* streamName, char const* inputFileName); // fwd
 
 static char newDemuxWatchVariable;
 
@@ -44,11 +38,11 @@ static char newDemuxWatchVariable;
 void run_on_demand_server() {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
-  env = BasicUsageEnvironment::createNew(*scheduler);
+  s_env = BasicUsageEnvironment::createNew(*scheduler);
   // Create the RTSP server:
-  RTSPServer* rtspServer = RTSPServer::createNew(*env, 8554, nullptr);
+  RTSPServer* rtspServer = RTSPServer::createNew(*s_env, 8554, nullptr);
   if (rtspServer == NULL) {
-    *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
+    *s_env << "Failed to create RTSP server: " << s_env->getResultMsg() << "\n";
     return;
   }
 
@@ -57,13 +51,13 @@ void run_on_demand_server() {
 
     char const* streamName = "mirror";
     ServerMediaSession* sms
-    = ServerMediaSession::createNew(*env, streamName, streamName,
-				    descriptionString);
+    = ServerMediaSession::createNew(*s_env, streamName, streamName,
+                    descriptionString);
 
     sms->addSubsession(H264VideoFileServerMediaSubsession
-		    ::createNew(*env, "test.264", true));
+            ::createNew(*s_env, "test.264", true));
     sms->addSubsession(ADTSAudioFileServerMediaSubsession
-		    ::createNew(*env, "test.aac", true));
+            ::createNew(*s_env, "test.aac", true));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, "mirror", "");
@@ -74,16 +68,16 @@ void run_on_demand_server() {
   // port numbers (8000 and 8080).
 
   if (rtspServer->setUpTunnelingOverHTTP(80) || rtspServer->setUpTunnelingOverHTTP(8000) || rtspServer->setUpTunnelingOverHTTP(8080)) {
-    *env << "\n(We use port " << rtspServer->httpServerPortNum() << " for optional RTSP-over-HTTP tunneling.)\n";
+    *s_env << "\n(We use port " << rtspServer->httpServerPortNum() << " for optional RTSP-over-HTTP tunneling.)\n";
   } else {
-    *env << "\n(RTSP-over-HTTP tunneling is not available.)\n";
+    *s_env << "\n(RTSP-over-HTTP tunneling is not available.)\n";
   }
 
-  env->taskScheduler().doEventLoop(); // does not return
+  s_env->taskScheduler().doEventLoop(); // does not return
 }
 
 static void announceStream(RTSPServer* rtspServer, ServerMediaSession* sms,
-			   char const* streamName, char const* inputFileName) {
+               char const* streamName, char const* inputFileName) {
   char* url = rtspServer->rtspURL(sms);
   UsageEnvironment& env = rtspServer->envir();
   env << "\n\"" << streamName << "\" stream, from the file \""

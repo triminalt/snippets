@@ -18,14 +18,14 @@ public:
         : env_(create_env())
         , pump_(pump) {
     }
-    
+
     ~aac_server() {
         env_->reclaim();
     }
 public:
-    bool start( unsigned profile
-		      , unsigned sample_freq_idx
-              , unsigned channel_cfg) {
+    bool start( std::uint8_t profile
+              , std::uint8_t sample_freq_idx
+              , std::uint8_t channel_cfg) {
         auto const instance = RTSPServer::createNew(*env_, 8554, nullptr);
         if (nullptr == instance) {
             return false;

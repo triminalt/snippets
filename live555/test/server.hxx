@@ -21,14 +21,14 @@ public:
         , aac_pump_(aac_pmp)
         , h264_pump_(h264_pmp) {
     }
-    
+
     ~server() {
         env_->reclaim();
     }
 public:
-    bool start( unsigned aac_profile
-		      , unsigned aac_sample_freq_idx
-              , unsigned aac_channel_cfg
+    bool start( std::uint8_t aac_profile
+              , std::uint8_t aac_sample_freq_idx
+              , std::uint8_t aac_channel_cfg
               , unsigned h264_fps
               , std::string h264_sps
               , std::string h264_pps) {

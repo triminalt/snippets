@@ -26,7 +26,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #if (defined(WIN32) || defined(_WIN32))
 #   include <io.h>
-#   include <fcntl.h>  
+#   include <fcntl.h>
 #else
 #   include <unistd.h>
 #endif
@@ -39,7 +39,7 @@ UsageEnvironment* env;
 Boolean reuseFirstSource = TRUE;
 
 static void announceStream(RTSPServer* rtspServer, ServerMediaSession* sms,
-			   char const* streamName, char const* inputFileName);
+               char const* streamName, char const* inputFileName);
 
 
 int main(int argc, char** argv) {
@@ -69,9 +69,9 @@ int main(int argc, char** argv) {
     char const* inputFileName = "test.aac";
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, streamName, streamName,
-				      descriptionString);
+                      descriptionString);
     sms->addSubsession(ADTSAudioFileServerMediaSubsession
-		       ::createNew(*env, inputFileName, reuseFirstSource));
+               ::createNew(*env, inputFileName, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, inputFileName);
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 }
 
 static void announceStream(RTSPServer* rtspServer, ServerMediaSession* sms,
-			   char const* streamName, char const* inputFileName) {
+               char const* streamName, char const* inputFileName) {
   char* url = rtspServer->rtspURL(sms);
   UsageEnvironment& env = rtspServer->envir();
   env << "\n\"" << streamName << "\" stream, from the file \""

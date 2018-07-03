@@ -14,7 +14,7 @@ public:
     h264_pump (unsigned fps, unsigned buffer_ms)
         : buffer_size_(buffer_size(fps, buffer_ms)) {
     }
-	~h264_pump() = default;
+    ~h264_pump() = default;
 public:
     bool produce(std::string const& packet) {
         if (!mutex_.try_lock()) {
@@ -46,7 +46,7 @@ public:
     }
 private:
     static inline unsigned buffer_size(unsigned fps, unsigned buffer_ms) {
-		auto const ms_pre_frame = double{1000} / fps;
+        auto const ms_pre_frame = double{1000} / fps;
         return static_cast<unsigned>(buffer_ms / ms_pre_frame);
     }
 public:

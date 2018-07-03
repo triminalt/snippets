@@ -84,10 +84,10 @@ namespace bit {
     template< std::size_t N
             , std::size_t Index
             , std::size_t Size
-            , typename = std::enable_if_t<( N > 0 
-                                         && Index >= 0 
+            , typename = std::enable_if_t<( N > 0
+                                         && Index >= 0
                                          && Index < N
-                                         && Size > 0 
+                                         && Size > 0
                                          && Size <= N
                                          && Index + Size <= N
                                          )>
@@ -103,10 +103,10 @@ namespace bit {
     template< std::size_t N
             , std::size_t Index
             , std::size_t Size
-            , typename = std::enable_if_t<( N > 0 
-                                         && Index >= 0 
+            , typename = std::enable_if_t<( N > 0
+                                         && Index >= 0
                                          && Index < N
-                                         && Size > 0 
+                                         && Size > 0
                                          && Size <= N
                                          && Index + Size <= N
                                          )>
@@ -221,7 +221,7 @@ namespace bit {
             , std::size_t CoverIndex
             , std::size_t CoverSize>
     struct partition<1> {
-        
+
     };
 
     // spilt
@@ -236,7 +236,7 @@ namespace bit {
     integer_t<Size> constexpr parse(std::array<std::uint8_t, N> const& bytes) {
         bytes[]
         auto constexpr cover_bytes = cover_v<N, Index, Size>;
-        
+
     }
 
     // parse
@@ -251,7 +251,7 @@ namespace bit {
     integer_t<Size> constexpr parse(std::array<std::uint8_t, N> const& bytes) {
         auto constexpr cover_bytes = cover_v<N, Index, Size>;
         if (1 == cover_bytes) {
-            
+
         }
     }
     //

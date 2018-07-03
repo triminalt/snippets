@@ -17,12 +17,12 @@ public:
         : env_(create_env())
         , pump_(pump) {
     }
-    
+
     ~h264_server() {
         env_->reclaim();
     }
 public:
-    bool start(unsigned fps , std::string sps, std::string pps) {
+    bool start(unsigned fps, std::string sps, std::string pps) {
         auto const instance = RTSPServer::createNew(*env_, 8554, nullptr);
         if (nullptr == instance) {
             return false;

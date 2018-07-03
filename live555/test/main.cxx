@@ -50,7 +50,7 @@ private:
 
     std::atomic_bool finished_{false};
     std::condition_variable finish_cv_;
-    std::mutex efinish_mutex_;   
+    std::mutex efinish_mutex_;
 };
 
 int main() {
@@ -59,12 +59,12 @@ int main() {
     aac_server aac_srv(&aac_pmp);
     aac_srv.start(1, 4, 2);
 #elif 0
-	h264_producer h264_prd(&h264_pmp);
+    h264_producer h264_prd(&h264_pmp);
     h264_server h264_srv(&h264_pmp);
     h264_srv.start(25, h264_prd.sps(), h264_prd.pps());
-#elif 1
+#elif 0
     aac_producer aac_prd(&aac_pmp);
-	h264_producer h264_prd(&h264_pmp);
+    h264_producer h264_prd(&h264_pmp);
     server srv(&aac_pmp, &h264_pmp);
     srv.start(1, 4, 2, 25, h264_prd.sps(), h264_prd.pps());
 #else

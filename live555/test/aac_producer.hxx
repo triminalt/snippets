@@ -13,7 +13,7 @@
 class aac_producer {
 public:
     aac_producer(aac_pump* pump)
-		: pump_(pump) {
+        : pump_(pump) {
         std::ifstream ifs{"test.aac", std::ios::binary};
         if (!ifs) {
             return;
@@ -21,7 +21,7 @@ public:
         ifs.seekg(0, std::ios::end);
         auto const size = static_cast<std::size_t>(ifs.tellg());
         ifs.seekg(0, std::ios::beg);
-        
+
         std::unique_ptr<char[]> buffer{new char[size]};
         ifs.read(buffer.get(), size);
 
@@ -33,7 +33,7 @@ public:
             unsigned char byte0 = static_cast<unsigned char>(buffer[i]);
             unsigned char byte1 = static_cast<unsigned char>(buffer[i + 1]);
             auto const is_ff = 0xff == byte0;
-			auto const is_f = 0xf0 == (0xf0 & byte1);
+            auto const is_f = 0xf0 == (0xf0 & byte1);
             if (!(is_ff && is_f)) {
                 break;
             }
@@ -80,9 +80,9 @@ private:
 
     std::atomic_bool finished_{false};
     std::condition_variable finish_cv_;
-    std::mutex efinish_mutex_;   
+    std::mutex efinish_mutex_;
 private:
-	aac_pump* pump_;
+    aac_pump* pump_;
     std::vector<std::string> packets_;
 };
 
