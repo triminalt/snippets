@@ -1,5 +1,5 @@
-#ifndef H264_SERVER_HXX
-#define H264_SERVER_HXX
+#ifndef H264_STREAM_HXX
+#define H264_STREAM_HXX
 
 
 #include <atomic>
@@ -11,16 +11,16 @@
 #include "./h264_pump.hxx"
 #include "./h264_subsession.hxx"
 
-class h264_server {
+class h264_stream {
 private:
     using ulock = std::unique_lock<std::mutex>;
 public:
-    h264_server(h264_pump* pump)
+    h264_stream(h264_pump* pump)
         : env_(create_env())
         , pump_(pump) {
     }
 
-    ~h264_server() {
+    ~h264_stream() {
         env_->reclaim();
     }
 public:
@@ -70,7 +70,7 @@ private:
     }
 
     bool loop() {
-        thread_ = std::thread{&h264_server::thread_routine, this};
+        thread_ = std::thread{&h264_stream::thread_routine, this};
         try {
             thread_.detach();
         } catch (std::exception const& e) {
@@ -102,5 +102,6 @@ private:
     std::condition_variable finish_cv_;
     std::mutex finish_mutex_;
 };
+
 
 #endif
