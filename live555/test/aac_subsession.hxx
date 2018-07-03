@@ -4,28 +4,15 @@
 
 
 #include <OnDemandServerMediaSubsession.hh>
+#include <PassiveServerMediaSubsession.hh>
 #include <MPEG4GenericRTPSink.hh>
 #include "./aac_source.hxx"
 
 class aac_subsession final : public OnDemandServerMediaSubsession {
 public:
-    static aac_subsession* createNew( UsageEnvironment& env
-                                    , Boolean reused
-                                    , aac_pump* pump
-                                    , unsigned profile
-		                            , unsigned sampling_freq_idx
-                                    , unsigned channel_cfg) {
-        return new aac_subsession{ env
-                                 , pump
-                                 , reused
-                                 , profile
-                                 , sampling_freq_idx
-                                 , channel_cfg};
-    }
-private:
     aac_subsession( UsageEnvironment& env
-                  , aac_pump* pump
                   , Boolean reused
+                  , aac_pump* pump
                   , unsigned profile
 		          , unsigned sampling_freq_idx
                   , unsigned channel_cfg)
@@ -36,7 +23,6 @@ private:
         , channel_config_(channel_cfg)  {
         // EMPTY
     }
-
 protected:
     virtual FramedSource* createNewStreamSource( unsigned clientSessionId
 					                           , unsigned& estBitrate) override {

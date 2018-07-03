@@ -1,39 +1,46 @@
-#ifndef AAC_SERVER_HXX
-#define AAC_SERVER_HXX
+#ifndef SERVER_HXX
+#define SERVER_HXX
 
 
 #include <atomic>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <iostream>
 #include <BasicUsageEnvironment.hh>
 #include <RTSPServer.hh>
 #include "./aac_pump.hxx"
 #include "./aac_subsession.hxx"
+#include "./h264_pump.hxx"
+#include "./h264_subsession.hxx"
 
-
-class aac_server {
+class server final {
 public:
-    aac_server(aac_pump* pump)
+    server(aac_pump* aac_pmp, h264_pump* h264_pmp)
         : env_(create_env())
-        , pump_(pump) {
+        , aac_pump_(aac_pmp)
+        , h264_pump_(h264_pmp) {
     }
     
-    ~aac_server() {
+    ~server() {
         env_->reclaim();
     }
 public:
-    bool start( unsigned profile
-		      , unsigned sample_freq_idx
-              , unsigned channel_cfg) {
+    bool start( unsigned aac_profile
+		      , unsigned aac_sample_freq_idx
+              , unsigned aac_channel_cfg
+              , unsigned h264_fps
+              , std::string h264_sps
+              , std::string h264_pps) {
         auto const instance = RTSPServer::createNew(*env_, 8554, nullptr);
         if (nullptr == instance) {
             return false;
         }
-        auto sms = ServerMediaSession::createNew(*env_, "aac", "aac", "aac stream");
-        sms->addSubsession(new aac_subsession(*env_, true, pump_, profile, sample_freq_idx, channel_cfg));
+        auto sms = ServerMediaSession::createNew(*env_, "mirror", "mirror", "mirror stream");
+        sms->addSubsession(new aac_subsession(*env_, true, aac_pump_, aac_profile, aac_sample_freq_idx, aac_channel_cfg));
+        sms->addSubsession(new h264_subsession(*env_, true, h264_pump_, h264_fps, h264_sps, h264_pps));
         instance->addServerMediaSession(sms);
-        announce(instance, sms, "aac");
+        announce(instance, sms, "mirror");
         return loop();
     }
 
@@ -45,10 +52,6 @@ public:
         };
         finish_cv_.wait(lock, wait_predicate);
         return true;
-    }
-public:
-    bool push(std::string const& packet) {
-        return pump_->produce(packet);
     }
 private:
     static inline BasicUsageEnvironment* create_env() {
@@ -64,7 +67,7 @@ private:
     }
 
     bool loop() {
-        thread_ = std::thread{&aac_server::thread_routine, this};
+        thread_ = std::thread{&server::thread_routine, this};
         try {
             thread_.detach();
         } catch (std::exception const& e) {
@@ -77,18 +80,18 @@ private:
     }
 private:
     static void announce(RTSPServer* server, ServerMediaSession* sms, char const* stream) {
-        char* url = server->rtspURL(sms);
+        std::unique_ptr<char[]> url{server->rtspURL(sms)};
         UsageEnvironment& env = server->envir();
         env << "\n\"" << stream << "\" stream, from the file \n";
-        env << "Play this stream using the URL  " << url << "  \n";
-        delete[] url;
+        env << "Play this stream using the URL  " << url.get() << "  \n";
     }
 private:
     char volatile event_looping_ = 0;
 private:
     BasicUsageEnvironment* env_;
 private:
-    aac_pump* pump_;
+    aac_pump* aac_pump_;
+    h264_pump* h264_pump_;
 private:
     std::atomic_bool running_{true};
     std::thread thread_;

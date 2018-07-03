@@ -4,26 +4,26 @@
 
 #include <string>
 #include <OnDemandServerMediaSubsession.hh>
+#include <H264VideoStreamFramer.hh>
 #include <H264VideoRTPSink.hh>
 #include "./h264_pump.hxx"
 #include "./h264_source.hxx"
+#include "./h264_sink.hxx"
+
 
 class h264_subsession final: public OnDemandServerMediaSubsession {
 public:
-	static h264_subsession* createNew( UsageEnvironment& env
-									 , Boolean reused
-									 , h264_pump* pump
-									 , unsigned fps) {
-		return new h264_subsession(env, reused, pump, fps);
-	}
-private:
-	h264_subsession(UsageEnvironment& env
+	h264_subsession( UsageEnvironment& env
 				   , Boolean reused
 				   , h264_pump* pump
-				   , unsigned fps)
+				   , unsigned fps
+                   , std::string sps
+                   , std::string pps)
 		: OnDemandServerMediaSubsession(env, reused)
         , pump_(pump)
-	    , fps_(fps) {
+	    , fps_(fps)
+        , sps_(sps)
+        , pps_(pps) {
 		// EMPTY
 	}
 	virtual ~h264_subsession() = default;
@@ -31,27 +31,27 @@ protected:
 	virtual FramedSource* createNewStreamSource( unsigned
 											   , unsigned& bitrate) override {
 		bitrate = 1024;
-		return h264_source::createNew(envir(), pump_, fps_);
+        return H264VideoStreamFramer::createNew( envir()
+                                               , new h264_source( envir()
+                                                                , pump_
+                                                                , fps_)
+                                               , true);
 	}
 	virtual RTPSink* createNewRTPSink( Groupsock* rtp
 									 , unsigned char rtp_payload_type_if_dynamic
 									 , FramedSource*) override {
-		auto const sps = reinterpret_cast<u_int8_t const*>(sps_.c_str());
-		auto const pps = reinterpret_cast<u_int8_t const*>(pps_.c_str());
-		return H264VideoRTPSink::createNew( envir()
-										  , rtp
-										  , rtp_payload_type_if_dynamic
-										  , sps
-										  , sps_.size()
-										  , pps
-										  , pps_.size());
+		return new h264_sink( envir()
+							, rtp
+							, rtp_payload_type_if_dynamic
+							, sps_
+							, pps_);
 	}
-
 private:
     h264_pump* pump_;
 	unsigned fps_;
 	std::string sps_;
 	std::string pps_;
 };
+
 
 #endif // H264_SUBSESSION_HXX

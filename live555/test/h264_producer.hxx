@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <queue>
 #include <fstream>
+#include "h264_utils.hxx"
 #include "./h264_pump.hxx"
 
 
@@ -14,7 +15,7 @@ class h264_producer {
 public:
     h264_producer(h264_pump* pump)
 		: pump_(pump) {
-        std::ifstream ifs{"test.264", std::ios::binary};
+        std::ifstream ifs{"test.h264", std::ios::binary};
         if (!ifs) {
             return;
         }
@@ -31,15 +32,20 @@ public:
             if (i > size - 4) {
                 break;
             }
-            unsigned char byte0 = static_cast<unsigned char>(buffer[i]);
-            unsigned char byte1 = static_cast<unsigned char>(buffer[i + 1]);
-			unsigned char byte2 = static_cast<unsigned char>(buffer[i + 2]);
-			unsigned char byte3 = static_cast<unsigned char>(buffer[i + 3]);
-			auto const is_0001 = 0x00 == byte0 && 0x00 == byte1 && 0x00 == byte2 && 0x01 == byte3;
-            if (is_0001) {
+            if (h264_utils::has_start_code(std::string{&buffer[i], 4})) {
 				if (0 != i) {
-					frames_.emplace_back(std::string{&buffer[last], i - last});
-					last = i;
+                    auto const frame = std::string{&buffer[last], i - last};
+                    if (frame.size() > 4) {
+                        if (h264_utils::is_sps(frame[4])) {
+                            sps_ = frame.substr(4, frame.size() - 4);
+                        }
+                        else if (h264_utils::is_pps(frame[4])) {
+                            pps_ = frame.substr(4, frame.size() - 4);
+                        } else {
+					        frames_.emplace_back(frame);
+                        }
+					    last = i;
+                    }
 				}
 				i += 4;
 			} else {
@@ -48,6 +54,14 @@ public:
         }
         initialize_thread();
     }
+public:
+    std::string sps() const {
+        return sps_;
+    }
+    std::string pps() const {
+        return pps_;
+    }
+private:
     void thread_routine() {
         auto const size = frames_.size();
         auto i = std::vector<std::string>::size_type{0};
@@ -56,7 +70,7 @@ public:
                 i = 0;
             }
             pump_->produce(frames_[i++]);
-            std::this_thread::sleep_for(std::chrono::milliseconds{20});
+            std::this_thread::sleep_for(std::chrono::milliseconds{38});
         }
     }
     bool initialize_thread() {
@@ -72,6 +86,11 @@ public:
         return true;
     }
 private:
+	h264_pump* pump_;
+    std::vector<std::string> frames_;
+    std::string sps_;
+    std::string pps_;
+private:
     std::atomic_bool looping_{true};
     std::thread thread_;
     std::mutex mutex_;
@@ -79,10 +98,7 @@ private:
 
     std::atomic_bool finished_{false};
     std::condition_variable finish_cv_;
-    std::mutex efinish_mutex_;   
-private:
-	h264_pump* pump_;
-    std::vector<std::string> frames_;
+    std::mutex efinish_mutex_;
 };
 
 

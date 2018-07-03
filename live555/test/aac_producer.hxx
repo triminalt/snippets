@@ -14,7 +14,7 @@ class aac_producer {
 public:
     aac_producer(aac_pump* pump)
 		: pump_(pump) {
-        std::ifstream ifs{"sample.aac", std::ios::binary};
+        std::ifstream ifs{"test.aac", std::ios::binary};
         if (!ifs) {
             return;
         }

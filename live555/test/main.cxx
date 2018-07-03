@@ -10,6 +10,10 @@
 #include "./h264_producer.hxx"
 #include "./h264_server.hxx"
 
+#include "./server.hxx"
+
+#include "./on_demand_server.hxx"
+
 
 static aac_pump aac_pmp{44100, 1000};
 static h264_pump h264_pmp{25, 1000};
@@ -50,14 +54,21 @@ private:
 };
 
 int main() {
-	
-    aac_producer aac_prd(&aac_pmp);
-	h264_producer h264_prd(&h264_pmp);
 #if 0
-    aac_consumer csm;
-#else
+    aac_producer aac_prd(&aac_pmp);
     aac_server aac_srv(&aac_pmp);
     aac_srv.start(1, 4, 2);
+#elif 0
+	h264_producer h264_prd(&h264_pmp);
+    h264_server h264_srv(&h264_pmp);
+    h264_srv.start(25, h264_prd.sps(), h264_prd.pps());
+#elif 1
+    aac_producer aac_prd(&aac_pmp);
+	h264_producer h264_prd(&h264_pmp);
+    server srv(&aac_pmp, &h264_pmp);
+    srv.start(1, 4, 2, 25, h264_prd.sps(), h264_prd.pps());
+#else
+    run_on_demand_server();
 #endif
     std::this_thread::sleep_for(std::chrono::hours{1});
     return 0;
