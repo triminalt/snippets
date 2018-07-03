@@ -141,15 +141,15 @@ add_executable(server WIN32
     ${DIR}/test/aac_producer.hxx
     ${DIR}/test/aac_source.hxx
     ${DIR}/test/aac_subsession.hxx
-    ${DIR}/test/aac_server.hxx
+    ${DIR}/test/aac_stream.hxx
     ${DIR}/test/h264_utils.hxx
     ${DIR}/test/h264_pump.hxx
     ${DIR}/test/h264_producer.hxx
     ${DIR}/test/h264_source.hxx
     ${DIR}/test/h264_sink.hxx
     ${DIR}/test/h264_subsession.hxx
-    ${DIR}/test/h264_server.hxx
-    ${DIR}/test/server.hxx
+    ${DIR}/test/h264_stream.hxx
+    ${DIR}/test/stream.hxx
     ${DIR}/test/main.cxx
     )
 target_link_libraries(server
