@@ -3,10 +3,11 @@
 #define AAC_SUBSESSION_HXX
 
 
+#include <cstdint>
 #include <OnDemandServerMediaSubsession.hh>
-#include <PassiveServerMediaSubsession.hh>
-#include <MPEG4GenericRTPSink.hh>
+#include "./aac_pump.hxx"
 #include "./aac_source.hxx"
+#include "./aac_sink.hxx"
 
 class aac_subsession final : public OnDemandServerMediaSubsession {
 public:
@@ -34,17 +35,15 @@ protected:
                            , channel_config_);
     }
     virtual RTPSink* createNewRTPSink( Groupsock* rtp
-                                     , unsigned char rtpPayloadTypeIfDynamic
+                                     , unsigned char rtp_payload_type_if_dynamic
                                      , FramedSource* src) override {
         aac_source* aac_src = reinterpret_cast<aac_source*>(src);
-        return MPEG4GenericRTPSink::createNew( envir()
-                                             , rtp
-                                             , rtpPayloadTypeIfDynamic
-                                             , aac_src->sampling_frequency()
-                                             , "audio"
-                                             , "AAC-hbr"
-                                             , aac_src->config_str()
-                                             , aac_src->channels());
+        return new aac_sink( envir()
+                           , rtp
+                           , rtp_payload_type_if_dynamic
+                           , aac_src->sampling_frequency()
+                           , aac_src->config()
+                           , aac_src->channels());
     }
 private:
     aac_pump* pump_;

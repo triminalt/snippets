@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <queue>
 #include <fstream>
+#include "./aac_utils.hxx"
 #include "./aac_pump.hxx"
 
 
@@ -30,19 +31,10 @@ public:
             if (i > size - 7) {
                 break;
             }
-            unsigned char byte0 = static_cast<unsigned char>(buffer[i]);
-            unsigned char byte1 = static_cast<unsigned char>(buffer[i + 1]);
-            auto const is_ff = 0xff == byte0;
-            auto const is_f = 0xf0 == (0xf0 & byte1);
-            if (!(is_ff && is_f)) {
+            if (!aac_utils::has_syncword(&buffer[i], 2)) {
                 break;
             }
-            std::uint16_t const len = ((buffer[i + 3] & 0x03) << 11)
-                                    | (buffer[i + 4] << 3)
-                                    | ((buffer[i + 5] & 0xE0) >> 5);
-            //if (++x > 2500) {
-            //    break;
-            //}
+            auto const len = aac_utils::packet_len(&buffer[i + 3], 3);
             packets_.emplace_back(std::string{&buffer[i], len});
             i += len;
         }
@@ -50,6 +42,9 @@ public:
         initialize_thread();
     }
     void thread_routine() {
+        if (packets_.empty()) {
+            return;
+        }
         auto const size = packets_.size();
         auto i = std::vector<std::string>::size_type{0};
         for (;looping_;) {

@@ -136,11 +136,13 @@ add_executable(server WIN32
     ${DIR}/test/arrptr.hxx
     ${DIR}/test/bit.hxx
     ${DIR}/test/adts.hxx
+    ${DIR}/test/aac_utils.hxx
     ${DIR}/test/aac_pump.hxx
     ${DIR}/test/aac_producer.hxx
     ${DIR}/test/aac_source.hxx
     ${DIR}/test/aac_subsession.hxx
     ${DIR}/test/aac_server.hxx
+    ${DIR}/test/h264_utils.hxx
     ${DIR}/test/h264_pump.hxx
     ${DIR}/test/h264_producer.hxx
     ${DIR}/test/h264_source.hxx

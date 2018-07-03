@@ -13,6 +13,8 @@
 
 
 class aac_server {
+private:
+    using ulock = std::unique_lock<std::mutex>;
 public:
     aac_server(aac_pump* pump)
         : env_(create_env())
@@ -30,16 +32,24 @@ public:
         if (nullptr == instance) {
             return false;
         }
-        auto sms = ServerMediaSession::createNew(*env_, "aac", "aac", "aac stream");
-        sms->addSubsession(new aac_subsession(*env_, true, pump_, profile, sample_freq_idx, channel_cfg));
+        auto sms = ServerMediaSession::createNew( *env_
+                                                , "aac"
+                                                , "aac"
+                                                , "aac stream");
+        sms->addSubsession(new aac_subsession( *env_
+                                             , true
+                                             , pump_
+                                             , profile
+                                             , sample_freq_idx
+                                             , channel_cfg));
         instance->addServerMediaSession(sms);
-        announce(instance, sms, "aac");
+        announce(instance, sms);
         return loop();
     }
 
     bool end() {
         event_looping_ = 1;
-        std::unique_lock<std::mutex> lock(finish_mutex_);
+        ulock lock(finish_mutex_);
         auto const wait_predicate = [this]() -> bool {
             return finished_;
         };
@@ -59,10 +69,8 @@ private:
     void thread_routine() {
         env_->taskScheduler().doEventLoop(&event_looping_);
         finished_ = true;
-        std::notify_all_at_thread_exit( finish_cv_
-                                      , std::unique_lock<std::mutex>{finish_mutex_});
+        std::notify_all_at_thread_exit(finish_cv_, ulock{finish_mutex_});
     }
-
     bool loop() {
         thread_ = std::thread{&aac_server::thread_routine, this};
         try {
@@ -76,12 +84,9 @@ private:
         return true;
     }
 private:
-    static void announce(RTSPServer* server, ServerMediaSession* sms, char const* stream) {
-        char* url = server->rtspURL(sms);
-        UsageEnvironment& env = server->envir();
-        env << "\n\"" << stream << "\" stream, from the file \n";
-        env << "Play this stream using the URL  " << url << "  \n";
-        delete[] url;
+    static void announce(RTSPServer* server, ServerMediaSession* sms) {
+        std::unique_ptr<char[]> url{server->rtspURL(sms)};
+        std::clog << "stream url: " << url.get() << std::endl;
     }
 private:
     char volatile event_looping_ = 0;

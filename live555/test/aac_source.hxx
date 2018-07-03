@@ -22,17 +22,11 @@ public:
         , sampling_frequency_(sampling_frequency(sampling_freq_idx))
         , channels_(channel_cfg == 0 ? 2 : channel_cfg)
         , usecs_pre_frame_((1024 * 1000000) / sampling_frequency(sampling_freq_idx)) {
-
-        std::uint8_t audio_specific_cfg[2] = {0};
-        std::uint8_t const audio_object_type = profile + 1;
-        audio_specific_cfg[0] = (audio_object_type << 3)
-                              | (sampling_freq_idx >> 1);
-        audio_specific_cfg[1] = (sampling_freq_idx << 7)
-                              | (channel_cfg << 3);
-        sprintf( config_str_
-               , "%02X%02x"
-               , audio_specific_cfg[0]
-               , audio_specific_cfg[1]);
+        std::uint8_t specific_cfg[2] = {0};
+        std::uint8_t const object_type = profile + 1;
+        specific_cfg[0] = (object_type << 3) | (sampling_freq_idx >> 1);
+        specific_cfg[1] = (sampling_freq_idx << 7) | (channel_cfg << 3);
+        sprintf(config_, "%02X%02x", specific_cfg[0], specific_cfg[1]);
     }
     virtual ~aac_source() = default;
 public:
@@ -42,8 +36,8 @@ public:
     unsigned channels() const {
         return channels_;
     }
-    char const* config_str() const {
-        return config_str_;
+    char const* config() const {
+        return config_;
     }
 private:
     static inline unsigned sampling_frequency(std::size_t i) {
@@ -132,7 +126,7 @@ private:
     unsigned channels_;
     unsigned usecs_pre_frame_;
 private:
-    char config_str_[5];
+    char config_[5];
 };
 
 

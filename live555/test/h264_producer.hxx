@@ -32,7 +32,7 @@ public:
             if (i > size - 4) {
                 break;
             }
-            if (h264_utils::has_start_code(std::string{&buffer[i], 4})) {
+            if (h264_utils::has_start_code(&buffer[i], 4)) {
                 if (0 != i) {
                     auto const frame = std::string{&buffer[last], i - last};
                     if (frame.size() > 4) {
@@ -63,6 +63,9 @@ public:
     }
 private:
     void thread_routine() {
+        if (frames_.empty()) {
+            return;
+        }
         auto const size = frames_.size();
         auto i = std::vector<std::string>::size_type{0};
         for (;looping_;) {

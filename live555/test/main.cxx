@@ -62,7 +62,7 @@ int main() {
     h264_producer h264_prd(&h264_pmp);
     h264_server h264_srv(&h264_pmp);
     h264_srv.start(25, h264_prd.sps(), h264_prd.pps());
-#elif 0
+#elif 1
     aac_producer aac_prd(&aac_pmp);
     h264_producer h264_prd(&h264_pmp);
     server srv(&aac_pmp, &h264_pmp);
