@@ -74,10 +74,8 @@ int main() {
     aac_producer aac_prd(aac_pmp);
     h264_producer h264_prd(h264_pmp);
 #endif
-    stream s;
-    s.start( "mirror"
-           , 8854
-           , 1
+    stream s("mirror", 8854);
+    s.start( 1
            , 4
            , 2
            , 1080
@@ -85,9 +83,12 @@ int main() {
            , 2000
            , 25);
     std::clog << "\n\nURL   "  << s.url() << std::endl;
+
+    std::this_thread::sleep_for(std::chrono::minutes{1});
+    s.end();
 #else
     run_on_demand_server();
 #endif
-    std::this_thread::sleep_for(std::chrono::hours{1});
+    std::this_thread::sleep_for(std::chrono::minutes{1});
     return 0;
 }

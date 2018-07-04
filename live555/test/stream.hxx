@@ -37,17 +37,30 @@ class stream final {
 private:
     using ulock = std::unique_lock<std::mutex>;
 public:
-    stream()
+    stream(std::string const& path, std::uint16_t port)
         : env_(create_env()) {
-        // EMPTY
+        server_ = RTSPServer::createNew(*env_, port);
+        if (nullptr == server_) {
+            return;
+        }
+        session_ = ServerMediaSession::createNew(*env_, path.c_str());
+        url_ = url(server_, session_);
+        available_ = true;
     }
     ~stream() {
+        end();
+        Medium::close(server_);
         env_->reclaim();
     }
 public:
-    bool start( std::string const& path
-              , std::uint16_t port
-              , std::uint8_t aac_profile
+    bool available() const {
+        return available_;
+    }
+    std::string url() const {
+        return url_;
+    }
+public:
+    bool start( std::uint8_t aac_profile
               , std::uint8_t aac_sampling_frequency_index
               , std::uint8_t aac_channel_config
               , unsigned h264_width
@@ -60,6 +73,10 @@ public:
               , std::string const& h264_sps
               , std::string const& h264_pps) {
 #endif
+        if (working_) {
+            end();
+        }
+        working_ = true;
         aac_pump_.reset(new aac_pump{ aac_utils::sampling_frequency
                                     ( aac_sampling_frequency_index)
                                     , buffer_ms});
@@ -70,40 +87,42 @@ public:
         auto const h264_sps = h264_producer_->sps();
         auto const h264_pps = h264_producer_->pps();
 #endif
-        server_ = RTSPServer::createNew(*env_, port);
-        if (nullptr == server_) {
+        auto const aac_ss = new aac_subsession( *env_
+                                              , true
+                                              , aac_pump_
+                                              , aac_profile
+                                              , aac_sampling_frequency_index
+                                              , aac_channel_config);
+        if (!session_->addSubsession(aac_ss)) {
             return false;
         }
-        session_ = ServerMediaSession::createNew(*env_, path.c_str());
-        session_->addSubsession(new aac_subsession( *env_
-                                                  , true
-                                                  , aac_pump_
-                                                  , aac_profile
-                                                  , aac_sampling_frequency_index
-                                                  , aac_channel_config));
-        session_->addSubsession(new h264_subsession( *env_
-                                                   , true
-                                                   , h264_pump_
-                                                   , h264_fps
-                                                   , h264_sps
-                                                   , h264_pps));
+        auto const h264_ss = new h264_subsession( *env_
+                                                , true
+                                                , h264_pump_
+                                                , h264_fps
+                                                , h264_sps
+                                                , h264_pps);
+        if (!session_->addSubsession(h264_ss)) {
+            return false;
+        }
         server_->addServerMediaSession(session_);
         return loop();
     }
     bool end() {
-        server_->deleteServerMediaSession(session_);
+        if (!working_) {
+            return false;
+        }
+        working_ = false;
         event_looping_ = 1;
         ulock lock(finish_mutex_);
         auto const wait_predicate = [this]() -> bool {
             return finished_;
         };
         finish_cv_.wait(lock, wait_predicate);
+        server_->deleteServerMediaSession(session_);
         return true;
     }
-    std::string url() {
-        std::unique_ptr<char[]> url{server_->rtspURL(session_)};
-        return std::string{url.get()};
-    }
+
 public:
     bool push_aac(std::string const& packet) {
         return h264_pump_->produce(packet);
@@ -115,6 +134,10 @@ private:
     static inline BasicUsageEnvironment* create_env() {
         auto const scheduler = BasicTaskScheduler::createNew();
         return BasicUsageEnvironment::createNew(*scheduler);
+    }
+    static std::string url(RTSPServer* server, ServerMediaSession* session) {
+        std::unique_ptr<char[]> url{server->rtspURL(session)};
+        return std::string{url.get()};
     }
 private:
     void thread_routine() {
@@ -137,9 +160,14 @@ private:
 private:
     static auto const buffer_ms = 500u;
 private:
+    bool available_;
+private:
+    std::atomic_bool working_{false};
+private:
     BasicUsageEnvironment* env_;
     ServerMediaSession* session_;
     RTSPServer* server_;
+    std::string url_;
 private:
     std::shared_ptr<aac_pump> aac_pump_;
     std::shared_ptr<h264_pump> h264_pump_;
@@ -149,7 +177,6 @@ private:
 #endif
 private:
     char volatile event_looping_ = 0;
-    std::atomic_bool running_{true};
     std::thread thread_;
     std::mutex mutex_;
     std::condition_variable cv_;
