@@ -11,6 +11,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <memory>
 #include <thread>
 #include <iostream>
 #include <BasicUsageEnvironment.hh>
@@ -23,7 +24,7 @@ class aac_stream {
 private:
     using ulock = std::unique_lock<std::mutex>;
 public:
-    aac_stream(aac_pump* pump)
+    aac_stream(std::shared_ptr<aac_pump> const& pump)
         : env_(create_env())
         , pump_(pump) {
     }
@@ -92,14 +93,14 @@ private:
 private:
     static void announce(RTSPServer* server, ServerMediaSession* sms) {
         std::unique_ptr<char[]> url{server->rtspURL(sms)};
-        std::clog << "stream url: " << url.get() << std::endl;
+        std::clog << "\n\nstream url: " << url.get() << std::endl;
     }
 private:
     char volatile event_looping_ = 0;
 private:
     BasicUsageEnvironment* env_;
 private:
-    aac_pump* pump_;
+    std::shared_ptr<aac_pump> pump_;
 private:
     std::atomic_bool running_{true};
     std::thread thread_;

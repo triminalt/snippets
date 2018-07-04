@@ -17,8 +17,7 @@
 
 class aac_pump final {
 public:
-    aac_pump( unsigned sampling_frequency
-            , unsigned buffer_ms)
+    aac_pump(unsigned sampling_frequency, unsigned buffer_ms)
         : buffer_size_(buffer_size(sampling_frequency, buffer_ms)) {
     }
     ~aac_pump() = default;
@@ -36,7 +35,6 @@ public:
         std::this_thread::yield();
         return true;
     }
-
     bool consume(std::string& packet) {
        if (!mutex_.try_lock()) {
             return false;
@@ -63,7 +61,6 @@ private:
     std::queue<std::string> packets_;
 private:
     std::mutex mutex_;
-private:
 };
 
 

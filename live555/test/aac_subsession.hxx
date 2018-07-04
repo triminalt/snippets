@@ -10,6 +10,7 @@
 
 
 #include <cstdint>
+#include <memory>
 #include <OnDemandServerMediaSubsession.hh>
 #include "./aac_pump.hxx"
 #include "./aac_source.hxx"
@@ -19,7 +20,7 @@ class aac_subsession final : public OnDemandServerMediaSubsession {
 public:
     aac_subsession( UsageEnvironment& env
                   , Boolean reused
-                  , aac_pump* pump
+                  , std::shared_ptr<aac_pump> const& pump
                   , std::uint8_t profile
                   , std::uint8_t sampling_freq_idx
                   , std::uint8_t channel_cfg)
@@ -52,7 +53,7 @@ protected:
                            , aac_src->channels());
     }
 private:
-    aac_pump* pump_;
+    std::shared_ptr<aac_pump> pump_;
     std::uint8_t profile_;
     std::uint8_t sampling_frequency_index_;
     std::uint8_t channel_config_;

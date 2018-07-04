@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <memory>
 #include <GroupsockHelper.hh>
 #include <FramedSource.hh>
 #include "./h264_utils.hxx"
@@ -21,7 +22,7 @@
 class h264_source final: public FramedSource {
 public:
     h264_source( UsageEnvironment& env
-               , h264_pump* pump
+               , std::shared_ptr<h264_pump> const& pump
                , unsigned fps)
         : FramedSource(env)
         , pump_(pump)
@@ -74,7 +75,7 @@ private:
         task = envir().taskScheduler().scheduleDelayedTask(0, f, this);
     }
 private:
-    h264_pump* pump_;
+    std::shared_ptr<h264_pump> pump_;
 private:
     unsigned fps_;
     unsigned usecs_pre_frame_;

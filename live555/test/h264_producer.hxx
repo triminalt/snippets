@@ -11,6 +11,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <memory>
 #include <condition_variable>
 #include <queue>
 #include <fstream>
@@ -20,7 +21,7 @@
 
 class h264_producer {
 public:
-    h264_producer(h264_pump* pump)
+    h264_producer(std::shared_ptr<h264_pump> const& pump)
         : pump_(pump) {
         std::ifstream ifs{"test.h264", std::ios::binary};
         if (!ifs) {
@@ -59,6 +60,7 @@ public:
                 ++i;
             }
         }
+
         initialize_thread();
     }
 public:
@@ -96,7 +98,7 @@ private:
         return true;
     }
 private:
-    h264_pump* pump_;
+    std::shared_ptr<h264_pump> pump_;
     std::vector<std::string> frames_;
     std::string sps_;
     std::string pps_;

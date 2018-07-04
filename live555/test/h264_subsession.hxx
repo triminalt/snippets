@@ -10,6 +10,7 @@
 
 
 #include <string>
+#include <memory>
 #include <OnDemandServerMediaSubsession.hh>
 #include <H264VideoStreamFramer.hh>
 #include <H264VideoRTPSink.hh>
@@ -22,7 +23,7 @@ class h264_subsession final: public OnDemandServerMediaSubsession {
 public:
     h264_subsession( UsageEnvironment& env
                    , Boolean reused
-                   , h264_pump* pump
+                   , std::shared_ptr<h264_pump> const& pump
                    , unsigned fps
                    , std::string sps
                    , std::string pps)
@@ -54,7 +55,7 @@ protected:
                             , pps_);
     }
 private:
-    h264_pump* pump_;
+    std::shared_ptr<h264_pump> pump_;
     unsigned fps_;
     std::string sps_;
     std::string pps_;

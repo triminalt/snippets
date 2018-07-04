@@ -21,7 +21,9 @@ struct aac_utils {
         if (packet.size() < 2) {
             return false;
         }
-        return 0xff == packet[0] && 0xf0 == (0xf0 & packet[1]);
+        return    std::uint8_t{0xff} == static_cast<uint8_t>(packet[0])
+               && std::uint8_t{0xf0} == ( std::uint8_t{0xf0}
+                                        & static_cast<uint8_t>(packet[1]));
     }
 
     static std::uint16_t packet_len(std::string const& packet) {
@@ -49,6 +51,19 @@ struct aac_utils {
         return   ((bytes[0] & 0x03) << 11)
                | (bytes[1] << 3)
                | ((bytes[2] & 0xE0) >> 5);
+    }
+
+    static unsigned sampling_frequency(std::size_t i) {
+        if (i > 15) {
+            return 0;
+        }
+        static unsigned constexpr table[16] = {
+            96000 , 88200 , 64000 , 48000
+          , 44100 , 32000 , 24000 , 22050
+          , 16000 , 12000 , 11025 , 8000
+          , 7350  , 0     , 0     , 0
+        };
+        return table[i];
     }
 };
 

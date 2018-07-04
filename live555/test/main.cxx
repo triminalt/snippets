@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <ios>
+#include <iostream>
 #include <fstream>
 #include "./aac_pump.hxx"
 #include "./aac_producer.hxx"
@@ -21,8 +22,8 @@
 #include "./on_demand_server.hxx"
 
 
-static aac_pump aac_pmp{44100, 1000};
-static h264_pump h264_pmp{25, 1000};
+static auto const aac_pmp = std::shared_ptr<aac_pump>{new aac_pump{44100, 1000}};
+static auto const h264_pmp = std::shared_ptr<h264_pump>{new h264_pump{25, 1000}};
 
 class aac_consumer {
 public:
@@ -32,7 +33,7 @@ public:
     void thread_routine() {
         for (;looping_;) {
             std::string packet;
-            aac_pmp.consume(packet);
+            aac_pmp->consume(packet);
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
         }
     }
@@ -61,18 +62,29 @@ private:
 
 int main() {
 #if 0
-    aac_producer aac_prd(&aac_pmp);
-    aac_stream aac_s(&aac_pmp);
+    aac_producer aac_prd(aac_pmp);
+    aac_stream aac_s(aac_pmp);
     aac_s.start(1, 4, 2);
-#elif 1
-    h264_producer h264_prd(&h264_pmp);
-    h264_stream h264_s(&h264_pmp);
+#elif 0
+    h264_producer h264_prd(h264_pmp);
+    h264_stream h264_s(h264_pmp);
     h264_s.start(25, h264_prd.sps(), h264_prd.pps());
 #elif 1
-    aac_producer aac_prd(&aac_pmp);
-    h264_producer h264_prd(&h264_pmp);
-    stream s(&aac_pmp, &h264_pmp);
-    s.start(1, 4, 2, 25, h264_prd.sps(), h264_prd.pps());
+#if 0
+    aac_producer aac_prd(aac_pmp);
+    h264_producer h264_prd(h264_pmp);
+#endif
+    stream s;
+    s.start( "mirror"
+           , 8854
+           , 1
+           , 4
+           , 2
+           , 1080
+           , 720
+           , 2000
+           , 25);
+    std::clog << "\n\nURL   "  << s.url() << std::endl;
 #else
     run_on_demand_server();
 #endif

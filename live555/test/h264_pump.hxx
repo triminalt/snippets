@@ -17,7 +17,7 @@
 
 class h264_pump final {
 public:
-    h264_pump (unsigned fps, unsigned buffer_ms)
+    h264_pump(unsigned fps, unsigned buffer_ms)
         : buffer_size_(buffer_size(fps, buffer_ms)) {
     }
     ~h264_pump() = default;
@@ -35,7 +35,6 @@ public:
         std::this_thread::yield();
         return true;
     }
-
     bool consume(std::string& packet) {
        if (!mutex_.try_lock()) {
             return false;
@@ -61,7 +60,6 @@ private:
     std::queue<std::string> frames_;
 private:
     std::mutex mutex_;
-private:
 };
 
 

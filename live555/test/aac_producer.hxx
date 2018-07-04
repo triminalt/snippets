@@ -11,6 +11,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <memory>
 #include <condition_variable>
 #include <queue>
 #include <fstream>
@@ -20,7 +21,7 @@
 
 class aac_producer {
 public:
-    aac_producer(aac_pump* pump)
+    aac_producer(std::shared_ptr<aac_pump> const& pump)
         : pump_(pump) {
         std::ifstream ifs{"test.aac", std::ios::binary};
         if (!ifs) {
@@ -84,7 +85,7 @@ private:
     std::condition_variable finish_cv_;
     std::mutex efinish_mutex_;
 private:
-    aac_pump* pump_;
+    std::shared_ptr<aac_pump> pump_;
     std::vector<std::string> packets_;
 };
 

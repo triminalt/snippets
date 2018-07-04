@@ -11,6 +11,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <memory>
 #include <string>
 #include <thread>
 #include <iostream>
@@ -21,51 +22,76 @@
 #include "./h264_pump.hxx"
 #include "./h264_subsession.hxx"
 
+#define STREAM_TEST 1
+#if !defined(_DEBUG) && !defined(DEBUG)
+#   undef STREAM_TEST
+#   define STREAM_TEST 0
+#endif
+#if STREAM_TEST
+#   include "./aac_producer.hxx"
+#   include "./h264_producer.hxx"
+#endif
+
+
 class stream final {
 private:
     using ulock = std::unique_lock<std::mutex>;
 public:
-    stream(aac_pump* aac_pmp, h264_pump* h264_pmp)
-        : env_(create_env())
-        , aac_pump_(aac_pmp)
-        , h264_pump_(h264_pmp) {
+    stream()
+        : env_(create_env()) {
+        // EMPTY
     }
-
     ~stream() {
         env_->reclaim();
     }
 public:
-    bool start( std::uint8_t aac_profile
-              , std::uint8_t aac_sample_freq_idx
-              , std::uint8_t aac_channel_cfg
+    bool start( std::string const& path
+              , std::uint16_t port
+              , std::uint8_t aac_profile
+              , std::uint8_t aac_sampling_frequency_index
+              , std::uint8_t aac_channel_config
+              , unsigned h264_width
+              , unsigned h264_height
+              , unsigned h264_bitrate
+#if STREAM_TEST
+              , unsigned h264_fps) {
+#else
               , unsigned h264_fps
-              , std::string h264_sps
-              , std::string h264_pps) {
-        auto const instance = RTSPServer::createNew(*env_, 8554, nullptr);
-        if (nullptr == instance) {
+              , std::string const& h264_sps
+              , std::string const& h264_pps) {
+#endif
+        aac_pump_.reset(new aac_pump{ aac_utils::sampling_frequency
+                                    ( aac_sampling_frequency_index)
+                                    , buffer_ms});
+        h264_pump_.reset(new h264_pump{h264_fps, buffer_ms});
+#if STREAM_TEST
+        aac_producer_.reset(new aac_producer(aac_pump_));
+        h264_producer_.reset(new h264_producer(h264_pump_));
+        auto const h264_sps = h264_producer_->sps();
+        auto const h264_pps = h264_producer_->pps();
+#endif
+        server_ = RTSPServer::createNew(*env_, port);
+        if (nullptr == server_) {
             return false;
         }
-        auto sms = ServerMediaSession::createNew( *env_
-                                                , "mirror"
-                                                , "mirror"
-                                                , "mirror stream");
-        sms->addSubsession(new aac_subsession( *env_
-                                             , true
-                                             , aac_pump_
-                                             , aac_profile
-                                             , aac_sample_freq_idx
-                                             , aac_channel_cfg));
-        sms->addSubsession(new h264_subsession( *env_
-                                              , true
-                                              , h264_pump_
-                                              , h264_fps
-                                              , h264_sps
-                                              , h264_pps));
-        instance->addServerMediaSession(sms);
-        announce(instance, sms);
+        session_ = ServerMediaSession::createNew(*env_, path.c_str());
+        session_->addSubsession(new aac_subsession( *env_
+                                                  , true
+                                                  , aac_pump_
+                                                  , aac_profile
+                                                  , aac_sampling_frequency_index
+                                                  , aac_channel_config));
+        session_->addSubsession(new h264_subsession( *env_
+                                                   , true
+                                                   , h264_pump_
+                                                   , h264_fps
+                                                   , h264_sps
+                                                   , h264_pps));
+        server_->addServerMediaSession(session_);
         return loop();
     }
     bool end() {
+        server_->deleteServerMediaSession(session_);
         event_looping_ = 1;
         ulock lock(finish_mutex_);
         auto const wait_predicate = [this]() -> bool {
@@ -73,6 +99,10 @@ public:
         };
         finish_cv_.wait(lock, wait_predicate);
         return true;
+    }
+    std::string url() {
+        std::unique_ptr<char[]> url{server_->rtspURL(session_)};
+        return std::string{url.get()};
     }
 public:
     bool push_aac(std::string const& packet) {
@@ -97,7 +127,7 @@ private:
         try {
             thread_.detach();
         } catch (std::exception const& e) {
-            std::cerr << "event thread detach failed: "
+            std::cerr << "thread detach failed: "
                       << e.what()
                       << std::endl;
             return false;
@@ -105,18 +135,20 @@ private:
         return true;
     }
 private:
-    static void announce(RTSPServer* server, ServerMediaSession* sms) {
-        std::unique_ptr<char[]> url{server->rtspURL(sms)};
-        std::clog << "stream url: " << url.get() << std::endl;
-    }
-private:
-    char volatile event_looping_ = 0;
+    static auto const buffer_ms = 500u;
 private:
     BasicUsageEnvironment* env_;
+    ServerMediaSession* session_;
+    RTSPServer* server_;
 private:
-    aac_pump* aac_pump_;
-    h264_pump* h264_pump_;
+    std::shared_ptr<aac_pump> aac_pump_;
+    std::shared_ptr<h264_pump> h264_pump_;
+#if STREAM_TEST
+    std::shared_ptr<aac_producer> aac_producer_;
+    std::shared_ptr<h264_producer> h264_producer_;
+#endif
 private:
+    char volatile event_looping_ = 0;
     std::atomic_bool running_{true};
     std::thread thread_;
     std::mutex mutex_;

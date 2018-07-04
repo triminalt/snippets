@@ -12,14 +12,16 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <memory>
 #include <GroupsockHelper.hh>
 #include <FramedSource.hh>
+#include "./aac_utils.hxx"
 #include "./aac_pump.hxx"
 
 class aac_source final: public FramedSource {
 public:
     aac_source( UsageEnvironment& env
-              , aac_pump* pump
+              , std::shared_ptr<aac_pump> pump
               , std::uint8_t profile
               , std::uint8_t sampling_freq_idx
               , std::uint8_t channel_cfg)
@@ -77,16 +79,10 @@ private:
         if (size < 7) {
             return false;
         }
-        unsigned char byte0 = static_cast<unsigned char>(packet[0]);
-        unsigned char byte1 = static_cast<unsigned char>(packet[1]);
-        auto const is_ff = 0xff == byte0;
-        auto const is_f = 0xf0 == (0xf0 & byte1);
-        if (!(is_ff && is_f)) {
+        if (!aac_utils::has_syncword(packet)) {
             return false;
         }
-        auto const len =static_cast<std::uint16_t>(((packet[3] & 0x03) << 11)
-                                      | (packet[4] << 3)
-                                      | ((packet[5] & 0xE0) >> 5));
+        auto const len = aac_utils::packet_len(packet);
         if (size != len) {
             return false;
         }
@@ -126,7 +122,7 @@ private:
         task = envir().taskScheduler().scheduleDelayedTask(0, f, this);
     }
 private:
-    aac_pump* pump_;
+    std::shared_ptr<aac_pump> pump_;
 private:
     unsigned profile_;
     unsigned sampling_frequency_;
